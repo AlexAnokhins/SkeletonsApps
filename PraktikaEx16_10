@@ -18,10 +18,9 @@
         var funcgraph = {};//текущий график
         function polinom(x) { };//не используется, полином-функция
         function funcdiff(x) { };//текущая производная
-        var funcdiffgraph = plot.addFunc(Math.log, 0, 0);;//текущий график производной
-        var interpolationgraph = {};//текущий график интерполяции
+        var funcdiffgraph = plot.addFunc(Math.log, 0, 0);//текущий график производной
+        var interpolationgraph = plot.addFunc(Math.log, 0, 0);//текущий график интерполяции
         var controls = new app.Controls("controls");
-
 
 
         //*************************ПОЛЕЗНЫЕ_ДИСКРЕТНЫЕ_ФУНКЦИИ*************************
@@ -73,6 +72,7 @@
         //Исследуемые функции
         controls.addButton(function () {//кнопка синуса
             plot.removeFunc(funcdiffgraph);
+            plot.removeFunc(interpolationgraph);
             counter = 0;
             plot.removeFunc(funcgraph);
             leftborder = -10;
@@ -85,6 +85,7 @@
 
         controls.addButton(function () {//кнопка гиперболы
             plot.removeFunc(funcdiffgraph);
+            plot.removeFunc(interpolationgraph);
             counter = 0;
             plot.removeFunc(funcgraph);
             leftborder = inverseborder;
@@ -97,6 +98,7 @@
 
         controls.addButton(function () {//кнопка линейной функции
             plot.removeFunc(funcdiffgraph);
+            plot.removeFunc(interpolationgraph);
             counter = 0;
             plot.removeFunc(funcgraph);
             leftborder = -10;
@@ -107,6 +109,7 @@
 
         controls.addButton(function () {//кнопка параболы
             plot.removeFunc(funcdiffgraph);
+            plot.removeFunc(interpolationgraph);
             counter = 0;
             plot.removeFunc(funcgraph);
             leftborder = -10;
@@ -120,6 +123,7 @@
 
         controls.addButton(function () {//кнопка синус икс, делить на икс
             plot.removeFunc(funcdiffgraph);
+            plot.removeFunc(interpolationgraph);
             counter = 0;
             plot.removeFunc(funcgraph);
             leftborder = -10;
@@ -132,6 +136,7 @@
 
         controls.addButton(function () {//кнопка логарифма
             plot.removeFunc(funcdiffgraph);
+            plot.removeFunc(interpolationgraph);
             counter = 0;
             plot.removeFunc(funcgraph);
             leftborder = logborder;
@@ -139,9 +144,9 @@
             funcgraph = plot.addFunc(Math.log, leftborder, rightborder);
             func = Math.log;
         }, "\\(ln(x)\\)");
-
         controls.addText("", { newLine: true });
-
+        controls.addText("Построение производных n-го порядка для элементарных функций $f^{(n)}(x) = (f^{(n-1)}(x))' = \lim_{t \\to 0} \\frac{f^{(n-1)}(x+t)-f^{(n-1)}(t)}{t} $");
+        controls.addText("", { newLine: true });
         //*****************************ДИФФЕРЕНЦИРОВАНИЕ_ФУНКЦИЙ********************************
         //наивный способ дифференцирования
         var dx = 0.001;//константа "бесконечномалого приращения"
@@ -221,7 +226,7 @@
 
         controls.addButton(function () {//кнопка наивной производной
             diffdrawer();
-        }, "Производная(наивная)");
+        }, "\\(f^{(n)}\\)");
 
         controls.addButton(function () {
             if (counter == 1) {
@@ -236,7 +241,10 @@
                     diffdrawer();
                 }
             }
-        }, "Предыдущая(наивная)");// кнопка наивной производной
+        }, "\\(f^{(n-1)}\\)");// кнопка наивной производной
+
+
+        controls.addText("Построение производных с использованием формул $(fg)^{(n)} = \\sum C_{n}^k f^{(n-k)}g^{(k)}$ и производных элементарных функций"/*, { newLine: true }*/);
 
         controls.addButton(function () {
             if (counter >= 0) {
@@ -247,7 +255,7 @@
                 funcdiff = diff(func, counter);
                 funcdiffgraph = plot.addFunc(diff(func, counter), leftborder, rightborder, { color: 1, width: 2 });
             }
-        }, "Производная(аналитическая)");//кнопка аналитической производной
+        }, "\\(f^{(n)}\\)");//кнопка аналитической производной
 
         controls.addButton(function () {
             if (counter == 1) {
@@ -261,7 +269,7 @@
                 funcdiffgraph = plot.addFunc(diff(func, counter), leftborder, rightborder, { color: 1, width: 2 });
             }
 
-        }, "Предыдущая(аналитическая)");//кнопка аналитической производной
+        }, "\\(f^{(n-1)}\\)");//кнопка аналитической производной
 
 
         //****************************************ИНТЕРПОЛЯЦИЯ***************************************************************
@@ -294,12 +302,15 @@
         }
 
         //*****************************************ИНТЕРФЕФС_ИНТЕРПОЛЯЦИИ_И_ПРОЧЕЕ****************************************************************
-
+        //, { newLine: true }
+        controls.addText("", { newLine: true });
+        controls.addText("Построение интерполяционного многочлена в форме Лагранжа $P_n(x) = \\sum f(x_k)\\Pi \\frac{x - x_i}{x_j - x_i}$");
+        controls.addText("",{ newLine: true });
         //кнопка-прорисовка интерполяционного многлочлена в форме Лагранжа
         controls.addButton(function () {
             var _n = 51;//точки пересечения
             interpolationgraph = plot.addFunc(interpolationL(func, _n), leftborder, rightborder, { color: 3, width: 4 });
-        }, "интерполяция по Лагранжу");
+        }, "$P_n(x)$");
 
         controls.addButton(function () {//кнопка-очистки экрана
             window.location.reload();
