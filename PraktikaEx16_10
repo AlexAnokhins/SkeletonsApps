@@ -1,0 +1,313 @@
+(function (id, id2) {
+    //app.Plotter1 = app.Plotter({});
+    var plot = Plotter(id, {
+        planeBorder: [-5, 5, -5, 5]/*,
+        click: function (x, y) {
+            plot.addPoint(x, y, {movable: true});
+        }*/
+    });
+    //раскомментируйте эту строчку, если нужен второй график
+    //var plot2 = Plotter(id2);
+
+    function testfunc() {
+
+        //****************************ГЛОБАЛЬНЫЕ_ПЕРЕМЕННЫЕ**************************************
+        var leftborder; //левая граница графика
+        var rightborder;//правая граница графика
+        function func(x) { }; //текущая функция
+        var funcgraph = {};//текущий график
+        function polinom(x) { };//не используется, полином-функция
+        function funcdiff(x) { };//текущая производная
+        var funcdiffgraph = plot.addFunc(Math.log, 0, 0);;//текущий график производной
+        var interpolationgraph = {};//текущий график интерполяции
+        var controls = new app.Controls("controls");
+
+
+
+        //*************************ПОЛЕЗНЫЕ_ДИСКРЕТНЫЕ_ФУНКЦИИ*************************
+        function factorial(n) {
+            if (n == 1 || n == 0) {
+                return 1;
+            }
+            else {
+                return factorial(n - 1) * n;
+            }
+        }
+
+        function C(n, k) {
+            return factorial(n) / (factorial(k) * factorial(n - k));
+        }
+
+
+        //*************************ИССЛЕДУЕМЫЕ_ФУНКЦИИ***********************************
+
+        function InverseLinear(x) {//гипербола
+            return 1 / x;
+        }
+
+
+
+        function Linear(x) {//линейная функция
+            return x;
+        }
+
+        function Quadric(x) {//парабола
+            return x * x;
+        }
+
+
+        function FracSinX(x) {//синус иск делить на икс
+            if (x == 0) {
+                return 0;
+            }
+            return Math.sin(x) / x;
+        }
+        //так же Math.sin  и Math.log
+
+
+        //***************************ОБЛАСТЬ_ОПРЕДЕЛЕНИЯ********************************
+        var inverseborder = 0.01;//пока строится только правая ветвь
+        var logborder = 0.001;//логарифм не определен в нуле
+
+        //*****************************ИНТЕРФЕЙС-КНОПКИ********************************
+        //Исследуемые функции
+        controls.addButton(function () {//кнопка синуса
+            plot.removeFunc(funcdiffgraph);
+            counter = 0;
+            plot.removeFunc(funcgraph);
+            leftborder = -10;
+            rightborder = 10;
+            funcgraph = plot.addFunc(Math.sin, leftborder, rightborder);
+            func = Math.sin;
+        }, "\\(sin(x)\\)");
+
+
+
+        controls.addButton(function () {//кнопка гиперболы
+            plot.removeFunc(funcdiffgraph);
+            counter = 0;
+            plot.removeFunc(funcgraph);
+            leftborder = inverseborder;
+            rightborder = 20;
+            funcgraph = plot.addFunc(InverseLinear, leftborder, rightborder);
+            func = InverseLinear;
+        }, "\\(\\frac{1}{x}\\)");
+
+
+
+        controls.addButton(function () {//кнопка линейной функции
+            plot.removeFunc(funcdiffgraph);
+            counter = 0;
+            plot.removeFunc(funcgraph);
+            leftborder = -10;
+            rightborder = 10;
+            funcgraph = plot.addFunc(Linear, leftborder, rightborder);
+            func = Linear;
+        }, "\\(x\\)");
+
+        controls.addButton(function () {//кнопка параболы
+            plot.removeFunc(funcdiffgraph);
+            counter = 0;
+            plot.removeFunc(funcgraph);
+            leftborder = -10;
+            rightborder = 10;
+            funcgraph = plot.addFunc(Quadric, leftborder, rightborder);
+            func = Quadric;
+        }, "\\(x^2\\)");
+
+
+
+
+        controls.addButton(function () {//кнопка синус икс, делить на икс
+            plot.removeFunc(funcdiffgraph);
+            counter = 0;
+            plot.removeFunc(funcgraph);
+            leftborder = -10;
+            rightborder = 10;
+            funcgraph = plot.addFunc(FracSinX, leftborder, rightborder);
+            func = FracSinX;
+        }, "\\(\\frac{sin(x)}{x}\\)");
+
+
+
+        controls.addButton(function () {//кнопка логарифма
+            plot.removeFunc(funcdiffgraph);
+            counter = 0;
+            plot.removeFunc(funcgraph);
+            leftborder = logborder;
+            rightborder = 10;
+            funcgraph = plot.addFunc(Math.log, leftborder, rightborder);
+            func = Math.log;
+        }, "\\(ln(x)\\)");
+
+        controls.addText("", { newLine: true });
+
+        //*****************************ДИФФЕРЕНЦИРОВАНИЕ_ФУНКЦИЙ********************************
+        //наивный способ дифференцирования
+        var dx = 0.001;//константа "бесконечномалого приращения"
+
+        function SimpleDiff(f)//наивное взятие производной
+        {
+            var dev = function (x) { return ((f(x + dx) - f(x)) / dx); };
+            return dev;
+        }
+
+        function BrutDiff(f, x)//наивное взятие производной, функцией от двух переменных
+        {
+            return ((f(x + dx) - f(x)) / dx);
+        }
+
+        function testf(x)//тестовая функция
+        {
+            return x * x / 2;
+        }
+
+        //аналитическое вычисление
+        function diff(f, n) {
+            if (n == 0)//если параметр равен нулю, то производная есть сама функция
+            {
+                return f;
+            }
+            if (f == InverseLinear)//аналитическая формула производных обратной линейной функции
+            {
+                var dev = function (x) { return (-(factorial(n)) * Math.pow(x, -1 - n)); }
+                return dev;
+            }
+            else if (f == Linear)//все три случая производных линейной функции
+            {
+                var dev = function (x) { if (n == 1) { return 1; } else { return 0; } };
+                return dev;
+            }
+            else if (f == Quadric)//аналогично 4 случая для параболы
+            {
+                var dev = function (x) { if (n == 1) { return 2 * x; } else if (n == 2) { return 2; } else { return 0; } };
+                return dev;
+            }
+            else if (f == Math.sin)//4 случая синуса
+            {
+                var dev = function (x) { if (n % 4 == 0) { return Math.sin(x); } else if (n % 4 == 1) { return Math.cos(x); } else if (n % 4 == 2) { return -Math.sin(x) } else { return -Math.cos(x); } };
+                return dev;
+            }
+            else if (f == Math.log)//сведение к обратной линейной функции
+            {
+                var dev = diff(InverseLinear, n - 1);
+                return dev;
+            }
+            else if (f == FracSinX)//аналитическая формула производной синус икс делить на икс 
+            {
+                function dsin(x, n) { if (n % 4 == 0) { return Math.sin(x); } else if (n % 4 == 1) { return Math.cos(x); } else if (n % 4 == 2) { return -Math.sin(x) } else { return -Math.cos(x); } };
+                function dInvLin(x, n) { return (-n) * Math.pow(x, -1 - n); };
+                var dev = function (x) { var res = 0; for (var i = 0; i <= n; ++i) { res += C(i, n) * dsin(x, n - i + 1) * dInvLin(x, i + 1); } return res; };
+                return dev;
+            }
+        }
+
+
+        //***************************************ДИФФЕРЕНЦИРОВАНИЕ_ИНТЕРФЕЙС*********************************************************************
+        var counter = 0;//счетчик текущей производной
+        //прорисовка следующей производной наивным методом
+        function diffdrawer() {
+            if (counter == 0) {
+                funcdiff = SimpleDiff(func);
+                funcdiffgraph = plot.addFunc(SimpleDiff(func), leftborder, rightborder, { color: 1, width: 2 });
+            }
+            else {
+                plot.removeFunc(funcdiffgraph);
+                funcdiffgraph = plot.addFunc(SimpleDiff(funcdiff), leftborder, rightborder, { color: 1, width: 2 });
+                funcdiff = SimpleDiff(funcdiff);
+            }
+            counter++;
+        }
+
+        controls.addButton(function () {//кнопка наивной производной
+            diffdrawer();
+        }, "Производная(наивная)");
+
+        controls.addButton(function () {
+            if (counter == 1) {
+                plot.removeFunc(funcdiffgraph);
+                counter = 0;
+            }
+            else if (counter > 0) {
+                plot.removeFunc(funcdiffgraph);
+                var counter2 = counter - 1;
+                counter = 0;
+                while (counter != counter2) {
+                    diffdrawer();
+                }
+            }
+        }, "Предыдущая(наивная)");// кнопка наивной производной
+
+        controls.addButton(function () {
+            if (counter >= 0) {
+                counter++;
+                if (counter > 1) {
+                    plot.remove(funcdiffgraph);
+                }
+                funcdiff = diff(func, counter);
+                funcdiffgraph = plot.addFunc(diff(func, counter), leftborder, rightborder, { color: 1, width: 2 });
+            }
+        }, "Производная(аналитическая)");//кнопка аналитической производной
+
+        controls.addButton(function () {
+            if (counter == 1) {
+                counter--;
+                plot.remove(funcdiffgraph);
+            }
+            else if (counter > 1) {
+                counter--;
+                plot.remove(funcdiffgraph);
+                funcdiff = diff(func, counter);
+                funcdiffgraph = plot.addFunc(diff(func, counter), leftborder, rightborder, { color: 1, width: 2 });
+            }
+
+        }, "Предыдущая(аналитическая)");//кнопка аналитической производной
+
+
+        //****************************************ИНТЕРПОЛЯЦИЯ***************************************************************
+
+        var QIntPoints = 51; // константа количества точек, по которым строим многочлен
+
+
+        function XId(i, n)//номер индекса точки в разбиении
+        {
+            return (((rightborder - leftborder) / n) * i + leftborder);
+        }
+
+        function interpolationL(f, n) //интерполяция функции с использованием полинома Лагранжа
+        {
+            function intf(x) {
+                var sum = 0;
+                var prod = 1;
+                for (var i = 0; i < n; ++i) {
+                    prod = 1;
+                    for (var j = 0; j < n; ++j) {
+                        if (j != i) {
+                            prod *= (x - XId(j, n)) / (XId(i, n) - XId(j, n));
+                        }
+                    }
+                    sum += prod * f(XId(i, n));
+                }
+                return sum;
+            }
+            return intf;
+        }
+
+        //*****************************************ИНТЕРФЕФС_ИНТЕРПОЛЯЦИИ_И_ПРОЧЕЕ****************************************************************
+
+        //кнопка-прорисовка интерполяционного многлочлена в форме Лагранжа
+        controls.addButton(function () {
+            var _n = 51;//точки пересечения
+            interpolationgraph = plot.addFunc(interpolationL(func, _n), leftborder, rightborder, { color: 3, width: 4 });
+        }, "интерполяция по Лагранжу");
+
+        controls.addButton(function () {//кнопка-очистки экрана
+            window.location.reload();
+            counter = 1;
+        }, "clear");
+    }
+
+
+    testfunc();
+
+})("graph", "new_graph");
